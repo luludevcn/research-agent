@@ -1,0 +1,20 @@
+{
+  "name": "research-agent",
+  "version": "1.0.0",
+  "description": "基于 Next.js、LangGraph 与 Vercel AI SDK 构建的研究型 Agent。项目采用分层架构：LangGraph 负责研究流程编排与状态恢复，AI SDK 负责模型调用、工具循环和流式交互。",
+  "license": "MIT",
+  "author": "",
+  "type": "commonjs",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "dependencies": {
+    "@ai-sdk/openai-compatible": "^3.0.75",
+    "@langchain/langgraph": "^1.5.1",
+    "@langchain/langgraph-checkpoint-sqlite": "^1.1.0",
+    "@modelcontextprotocol/sdk": "^1.32.1",
+    "ai": "^7.0.148",
+    "zod": "^4.6.7"
+  }
+}
