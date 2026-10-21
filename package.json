@@ -1,7 +1,7 @@
 {
   "name": "research-agent",
   "version": "1.0.0",
-  "description": "基于 Next.js、LangGraph 与 Vercel AI SDK 构建的研究型 Agent。项目采用分层架构：LangGraph 负责研究流程编排与状态恢复，AI SDK 负责模型调用、工具循环和流式交互。",
+  "description": "Research Agent is a tool that helps researchers to find relevant papers and articles on a given topic.",
   "license": "MIT",
   "author": "",
   "type": "commonjs",
