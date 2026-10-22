@@ -16,9 +16,11 @@
     "@modelcontextprotocol/sdk": "^1.32.1",
     "@prisma/client": "^7.10.1",
     "ai": "^7.0.148",
+    "dotenv": "^18.0.8",
     "zod": "^4.6.7"
   },
   "devDependencies": {
+    "@types/node": "^26.6.5",
     "prisma": "^8.0.0-rc.24",
     "tsx": "^4.23.15"
   }
