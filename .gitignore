@@ -136,3 +136,4 @@ dist
 .pnp.*
 
 data
+.DS_Store

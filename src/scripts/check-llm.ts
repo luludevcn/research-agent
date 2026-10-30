@@ -1,49 +1,76 @@
-import { generateText, tool } from "ai";
-import z from "zod";
-import { chatModel } from "../lib/llm/provider";
+import { Tool } from "openai/resources/responses/responses.mjs";
+import { client, model } from "../lib/llm/provider";
 
 async function main() {
-    console.log("Checking LLM...", process.env.LOCAL_QWEN_BASE_URL);
 
-    console.log("test 1: basic output")
-    const r1 = await generateText({model: chatModel, prompt:"Introduce yourself in on sentence"})
-    console.log(r1.text);
+    console.log("test 1: basic output");
+    const basic_response = await client.responses.create({
+        model,
+        input: [{ role: "user", content: "Introduce yourself in one sentence." }],
+    });
+    console.log(basic_response.output_text);
 
-    console.log("test 2: stream output")
-    const r2 = await generateText({model: chatModel,
-         prompt:"write from 1 to 5, divided by comma", 
-         onStepFinish:()=>{},
-        });
-    console.log(r2.text);
+    console.log("test 2: stream output");
+    const stream = await client.responses.create({
+        model,
+        input: [{ role: "user", content: "Write numbers from 1 to 5, separated by commas." }],
+        stream: true,
+    });
+
+    for await (const chunk of stream) {
+        if (chunk.type === "response.output_text.delta" && chunk.delta) {
+            process.stdout.write(chunk.delta);
+        }
+    }
 
     console.log("test 3: tool calling");
+    const tools: Tool[] = [{
+        type: "function",
+            name: "get_weather",
+            description: "Get the weather for a city.",
+            parameters: {
+                type: "object",
+                properties: {
+                    city: { type: "string", description: "City name" },
+                },
+                required: ["city"],
+                additionalProperties: false,
+            },
+            strict: false,
+    }];
+    const prompt = "How is the weather in Beijing today? Use the weather tool and answer in Chinese.";
+    const toolResponse = await client.responses.create({
+        model,
+        input: [{ role: "user", content: prompt }],
+        tools,
+        tool_choice: "auto",
+    });
 
-    const r3 = await generateText({
-        model: chatModel,
-         maxSteps:3,
-         tools:{
-            get_weather: tool({
-                description:"get the weather for city",
-                parameters:z.object({
-                    city:z.string().describe('city name'),
-                }),
-                execute: async ({city})=> ({city, weather: "sunshine", temperature: "30℃"})
+    const toolCall = toolResponse.output?.find(
+        (call) => call.type === "function_call" && call.name === "get_weather",
+    );
+    if (!toolCall || toolCall.type !== "function_call") {
+        throw new Error("test 3 failed: no get_weather tool call returned");
+    }
 
-            })
-         },
-          prompt:"how about the weather in beijing today? please call tools to get the weather, and anwser in chinese finnally"
-        });
+    const args: unknown = JSON.parse(toolCall.arguments);
+    if (!args || typeof args !== "object" || !("city" in args) || typeof args.city !== "string") {
+        throw new Error("test 3 failed: get_weather returned invalid arguments");
+    }
+    const { city } = args;
+    const toolResult = { city, weather: "sunshine", temperature: "30 C" };
+    const finalResponse = await client.responses.create({
+        model,
+        input: [
+            { role: "user", content: prompt },
+            {role: "assistant", content:toolResponse.output_text},
+            { role: "assistant", call_id: toolCall.call_id, content: JSON.stringify(toolResult) },
+        ],
+    });
 
-        const called = r3.steps.some((s)=>s.toolCalls?.some(c=>c.toolName==="get_weather"));
-        const toolResult = r3.steps.flatMap(s=>s.toolResults??[]);
-
-        if(!called) {
-            console.error("test 3 failed: no tool called");
-            process.exit(1);
-        }
-        console.log("test 3 passed: tool called");
-        console.log("tool called result: ",toolResult);
-        console.log("llm output: ", r3.content);
+    console.log("test 3 passed: tool called");
+    console.log("tool result:", toolResult);
+    console.log("llm output:", finalResponse.output_text);
 }
 
 main().catch((e)=> {

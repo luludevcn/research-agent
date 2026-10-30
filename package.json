@@ -4,25 +4,42 @@
   "description": "Research Agent is a tool that helps researchers to find relevant papers and articles on a given topic.",
   "license": "MIT",
   "author": "",
-  "type": "commonjs",
-  "main": "index.js",
+  "private": true,
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "next lint",
+    "check:llm": "tsx src/scripts/check-llm.ts",
+    "check:graph": "tsx src/scripts/check-graph.ts",
+    "check:agent": "tsx src/scripts/check-agent.ts"
   },
   "dependencies": {
-    "@ai-sdk/openai-compatible": "^3.0.75",
-    "@langchain/langgraph": "^1.5.1",
-    "@langchain/langgraph-checkpoint-sqlite": "^1.1.0",
-    "@modelcontextprotocol/sdk": "^1.32.1",
-    "@prisma/client": "^7.10.1",
-    "ai": "^7.0.148",
-    "dotenv": "^18.0.8",
-    "zod": "^4.6.7"
+    "next": "16.4.2",
+    "react": "19.3.1",
+    "react-dom": "19.3.1",
+    "@langchain/langgraph": "1.5.2",
+    "@langchain/langgraph-checkpoint-sqlite": "1.1.0",
+    "@modelcontextprotocol/sdk": "1.32.1",
+    "@prisma/client": "7.10.1",
+    "better-sqlite3": "12.11.1",
+    "zod": "4.6.7",
+    "openai": "7.43.0",
+    "dotenv": "18.0.9"
   },
   "devDependencies": {
-    "@types/better-sqlite3": "^9.6.0",
-    "@types/node": "^26.6.5",
-    "prisma": "^8.0.0-rc.24",
-    "tsx": "^4.23.15"
+    "typescript": "5.9.3",
+    "@types/node": "24.0.0",
+    "@types/react": "19.3.0",
+    "@types/react-dom": "19.3.0",
+    "@types/better-sqlite3": "9.6.0",
+    "prisma": "7.10.1",
+    "tailwindcss": "4.3.3",
+    "@tailwindcss/turbopack": "4.3.3",
+    "postcss": "8.5.31",
+    "autoprefixer": "10.6.1",
+    "eslint": "9.0.0",
+    "eslint-config-next": "16.4.2",
+    "tsx": "4.23.15"
   }
 }
