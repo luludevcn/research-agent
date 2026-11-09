@@ -76,13 +76,16 @@ async function fetchUrl(args: z.infer<typeof FetchUrlParams>) {
             Accept: "text/plain, text/html, application/json, */*",
         },
     });
-    if (res.ok) {
-        const html = await res.text();
-        const text = stripeHtml(html).slice(0, 4000);
-        if(text.length>50) return {url: args.url, content: text, via: "direct"};
+    if (!res.ok) {
+        throw new Error(`Failed to fetch ${args.url}: HTTP ${res.status}`);
     }
-    console.warn(`Failed to fetch or extract text from ${args.url}, status: ${res.status}`);
-    return {url: args.url, content: `Failed to fetch or extract text from ${args.url}`, via: "direct"};
+
+    const html = await res.text();
+    const text = stripeHtml(html).slice(0, 4000);
+    if (text.length <= 50) {
+        throw new Error(`Could not extract readable content from ${args.url}`);
+    }
+    return {url: args.url, content: text, via: "direct"};
     // const base = process.env.JINA_READER_BASE ?? "https://r.jina.ai";
     // const res = await fetch(`${base}/${args.url}}`, {
     //     headers: {Accept: "text/plain"}

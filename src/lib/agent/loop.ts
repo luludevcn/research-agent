@@ -10,6 +10,7 @@ export type ToolDef = {
 
 export type LoopEvent = 
     | {type: 'thought', content: string}
+    | {type: 'delta', text: string}
     | {type: 'tool_call', name:string, args: any}
     | {type: 'tool_result', name:string, result: any}
     | {type: 'final', content: string};
@@ -28,8 +29,13 @@ export async function runAgentLoop(opts:{
     maxSteps: number,
     onEvent?: (event: LoopEvent) => void,
     signal?: AbortSignal,
+    streamText?: boolean,
 }): Promise<{final: string; input: ResponseInputItem[]; toolResults:any[]}> {
-    const {system, user, tools, maxSteps = 5, onEvent, signal} = opts;
+    const {system, user, tools, maxSteps = 5, onEvent, signal, streamText = false} = opts;
+
+    if (streamText && tools.length > 0) {
+        throw new Error('streamText can only be used when no tools are provided');
+    }
 
     const input: ResponseInputItem[] = [{role:'user', content: user}];
     const toolResults: any[] = [];
@@ -47,6 +53,33 @@ export async function runAgentLoop(opts:{
         if (signal?.aborted) {
             throw new Error('Aborted');
         }
+        if (streamText) {
+            const stream = await client.responses.create({
+                model,
+                instructions: system,
+                input: input as any,
+                tools: toolSpecs,
+                temperature: 0.7,
+                stream: true,
+            }, {signal});
+
+            let final = '';
+            for await (const event of stream) {
+                if (event.type === 'response.output_text.delta') {
+                    final += event.delta;
+                    onEvent?.({type: 'delta', text: event.delta});
+                } else if (event.type === 'response.failed') {
+                    throw new Error(event.response.error?.message ?? 'Response stream failed');
+                } else if (event.type === 'error') {
+                    throw new Error('Response stream failed');
+                }
+            }
+
+            onEvent?.({type: 'final', content: final});
+            if (final) input.push({role: 'assistant', content: final});
+            return {final, input, toolResults};
+        }
+
         const response = await client.responses.create({
             model: model,
             instructions: system,

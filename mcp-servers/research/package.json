@@ -1,0 +1,24 @@
+{
+    "name": "research-mcp",
+    "version": "1.0.0",
+    "description": "Research MCP",
+    "type": "module",
+    "scripts": {
+        "build": "tsc", 
+        "dev": "tsx src/index.ts"
+    },
+    "keywords": [
+        "research",
+        "mcp"
+    ],
+    "author": "Research MCP",
+    "license": "MIT",
+    "dependencies": {
+        "@modelcontextprotocol/sdk": "^1.32.1",
+        "zod": "^3.20.5"
+    },
+    "devDependencies": {
+        "tsx": "^3.12.7",
+        "typescript": "^5.2.2"
+    }
+}
