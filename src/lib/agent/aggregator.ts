@@ -1,14 +1,16 @@
+import { Note } from "@prisma/client";
 import { client } from "../llm/provider";
 import { SubResult } from "./executer";
-import { Plan } from "./planner";
+import { buildSourceList } from "./citation";
 
 export async function aggregate(opts:{
     question: string;
-    plan: Plan;
-    results: SubResult[];
+    subResults: SubResult[];
+    notes: Note[];
     }): Promise<string> {
-        const {question, results} = opts;
-        const materials = results.map((r) => {
+        const {question, subResults, notes} = opts;
+        const sources = buildSourceList(notes);
+        const materials = subResults.map((r) => {
             return (
                 `子问题: ${r.question}\n` +
                 `结论: ${r.answer ?? "无结论"}\n` +
@@ -25,7 +27,7 @@ export async function aggregate(opts:{
             ##分节论述
             ##结论
             规则：只使用材料中的事实，不得编造，在句末用【来源URL】标注`,
-            input: `原始问题：${question}, 材料：${materials}`,
+            input: `原始问题：${question}, 材料：${materials}, 来源${sources}`,
         })
 
         return res.output_text??"";

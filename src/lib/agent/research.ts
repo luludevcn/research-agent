@@ -1,8 +1,9 @@
-import { report } from "process";
 import { executeSubQuestion, SubResult } from "./executer";
 import { ToolDef } from "./loop";
 import { plan } from "./planner";
 import { aggregate } from "./aggregator";
+import { createTask, getNotes, saveNotes, saveReport } from "../db/memory";
+import { normalizeCitation } from "./citation";
 
 export type ResearchEvent = | {type: "plan", plan: any}
     | {type: "subtask_start", id: string, question: string}
@@ -10,16 +11,17 @@ export type ResearchEvent = | {type: "plan", plan: any}
     | {type: "tool_call", subtask_id: string, name: string, args: any}
     | {type: "tool_result", subtask_id: string, name: string, result: any}
     | {type: "subtask_end", id: string, answer?: string, notes?:any[]}
-    | {type: "report", content: string}
+    | {type: "report", content: string, citedCount: number}
 
 export async function runResearch(opts:{
     question: string,
     tools: ToolDef[],
     onEvent: (event: ResearchEvent) => void
-}): Promise<{plan: any, results: SubResult[], report: string}> {
+}): Promise<{taskId: string, report: string}> {
 
-    const {question, tools, onEvent} = opts
-    const p = await plan(question)
+    const {question, tools, onEvent} = opts;
+    const p = await plan(question);
+    const task = await createTask(question, p);
     onEvent?.({type: "plan", plan: p});
 
     const results: SubResult[] = [];
@@ -29,18 +31,18 @@ export async function runResearch(opts:{
             sub, 
             tools, 
             onEvent:(e)=> onEvent?.(e as any),
-            maxSteps: 1
+            maxSteps: 3
         })
         results.push(r)
-        onEvent?.({type: "subtask_end", id: sub.id, answer: r.answer, notes: r.notes})
-            }
-
-            const report = await aggregate({question, plan: p, results})
-            onEvent?.({type: "report", content: report})
-    
-    return {
-        plan: p,
-        results,
-        report
+        await saveNotes(task.id, r.notes?.map(n=> ({...n, subTaskId: sub.id})));
+        onEvent?.({type: "subtask_end", id: sub.id, answer: r.answer})
     }
+
+    const notes = await getNotes(task.id);
+    const rawReport = await aggregate({question, subResults: results.map(r=>({id: r.id, answer: r.answer,question: r.question})), notes});
+    const {report, citedCount} = normalizeCitation(rawReport, notes);
+    await saveReport(task.id, report)
+    onEvent?.({type: "report", content: report, citedCount})
+    
+    return {taskId: task.id, report}
 }

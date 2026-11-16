@@ -1,0 +1,31 @@
+generator client {
+    provider = "prisma-client-js"
+}
+
+datasource db {
+    provider = "sqlite"
+}
+
+model Task {
+    id String @id @default(uuid())
+    question String
+    plan String
+    report String?
+    createAt DateTime @default(now())
+    notes Note[]
+}
+
+model Note {
+    id String @id @default(uuid())
+    taskId String
+    task Task @relation(fields: [taskId], references: [id], onDelete: Cascade)
+    url String
+    title String?
+    snippet String
+    from    String // "search" | "fetch"
+    subTaskId String?
+    createAt DateTime @default(now())
+
+    @@unique([taskId, url])
+    @@index([taskId])
+}

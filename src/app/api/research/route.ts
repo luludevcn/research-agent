@@ -40,7 +40,7 @@ export async function POST(request: NextRequest) {
           }
         }
 
-      const {report } = await runResearch({
+      const {taskId, report } = await runResearch({
         question,
         tools,
         onEvent: (event) => {
@@ -48,7 +48,7 @@ export async function POST(request: NextRequest) {
         },
       })
 
-      send({ type: "done", report})
+      send({ type: "done", taskId, report})
 
       } catch (e) {
         send({ type: "error", message: String(e) });
