@@ -1,5 +1,6 @@
 import {client} from "../../lib/llm/provider";
 import z from "zod";
+import { withRetry } from "../llm/retry";
 
 export const PlanSchema = z.object({
     subQuestions: z.array(z.object({
@@ -57,11 +58,12 @@ export async function plan(question: string): Promise<Plan> {
     }
 
     try {
-        const res = await client.responses.create({
+        const res =  await withRetry(()=> client.responses.create({
             model: process.env.LOCAL_QWEN_MODEL ?? "qwen2.5:7b",
             instructions: system,
             input: `question: ${question}}`,
-        })
+        }),{label: "plan"});
+        
         const text = res.output_text??"";
         const m = /\{[\s\S]*}/.exec(text);
         if(m) {

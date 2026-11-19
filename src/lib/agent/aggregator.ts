@@ -2,6 +2,7 @@ import { Note } from "@prisma/client";
 import { client } from "../llm/provider";
 import { SubResult } from "./executer";
 import { buildSourceList } from "./citation";
+import { withRetry } from "../llm/retry";
 
 const REPORT_INSTRUCTIONS = `你是研究助手，基于给定材料写一份结构化报告（markdown）:
             # 标题
@@ -68,11 +69,11 @@ export async function aggregate(opts:{
             )
         }).join("\n\n");
 
-        const res = await client.responses.create({
+        const res = await withRetry(()=> client.responses.create({
             model: process.env.LOCAL_QWEN_MODEL ?? "qwen2.5:7b",
             instructions: `${REPORT_INSTRUCTIONS}`,
             input: `原始问题：${question}, 材料：${materials}, 来源${sources}`,
-        })
+        }), {label: "aggregator"})
 
         return res.output_text??"";
 }

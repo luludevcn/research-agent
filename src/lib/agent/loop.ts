@@ -1,5 +1,6 @@
 import type OPENAI from 'openai';
 import {client, model} from '../llm/provider';
+import { withRetry } from '../llm/retry';
 
 export type ToolDef = {
     name: string,
@@ -80,16 +81,14 @@ export async function runAgentLoop(opts:{
             return {final, input, toolResults};
         }
 
-        const response = await client.responses.create({
+        const response = await withRetry(()=> client.responses.create({
             model: model,
             instructions: system,
             input: input as any,
             tools: toolSpecs,
             temperature: 0.7,
-        },
-        {signal}
-        );
-
+        }, {signal}), {label: "loop-step"});
+        
         const textParts: string[] = [];
         const functionCalls: {call_id: string, name: string, arguments: string}[] = [];
 
