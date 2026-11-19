@@ -1,17 +1,19 @@
 import { executeSubQuestion, SubResult } from "./executer";
 import { ToolDef } from "./loop";
 import { plan } from "./planner";
-import { aggregate } from "./aggregator";
+import { aggregateStream } from "./aggregator";
 import { createTask, getNotes, saveNotes, saveReport } from "../db/memory";
 import { normalizeCitation } from "./citation";
 
-export type ResearchEvent = | {type: "plan", plan: any}
+export type ResearchEvent =
+    | {type: "plan", plan: any}
     | {type: "subtask_start", id: string, question: string}
     | {type: "thought", subtask_id: string, content: string}
     | {type: "tool_call", subtask_id: string, name: string, args: any}
     | {type: "tool_result", subtask_id: string, name: string, result: any}
     | {type: "subtask_end", id: string, answer?: string, notes?:any[]}
-    | {type: "report", content: string, citedCount: number}
+    | {type: "report_delta", text: string}
+    | {type: "report_final", content: string, citedCount: number}
 
 export async function runResearch(opts:{
     question: string,
@@ -39,10 +41,15 @@ export async function runResearch(opts:{
     }
 
     const notes = await getNotes(task.id);
-    const rawReport = await aggregate({question, subResults: results.map(r=>({id: r.id, answer: r.answer,question: r.question})), notes});
-    const {report, citedCount} = normalizeCitation(rawReport, notes);
+    const raw = await aggregateStream({
+        question, 
+        subResults: results.map(r=>({id: r.id, answer: r.answer,question: r.question})), 
+        notes,
+        onDelta: (text)=> onEvent?.({type: "report_delta", text})
+    });
+    const {report, citedCount} = normalizeCitation(raw, notes);
     await saveReport(task.id, report)
-    onEvent?.({type: "report", content: report, citedCount})
+    onEvent?.({type: "report_final", content: report, citedCount})
     
     return {taskId: task.id, report}
 }
