@@ -14,7 +14,9 @@ type Evt =
   | { type: "report_delta"; text: string }
   | { type: "report_final"; content: string; citedCount: number }
   | { type: "done"; taskId?: string; report?: string }
-  | { type: "error"; message: string };
+  | { type: "error"; message: string }
+  | {type: "replan", added: {question: string}}
+  | {type: "timeout"}
 
 // 渲染用：事件流里排除 report_*，报告单独面板展示
 type TimelineEvt = Exclude<Evt, { type: "report_delta" } | { type: "report_final" }>;
@@ -103,6 +105,10 @@ export default function ResearchPage() {
       case "error":
         setError(e.message);
         break;
+      case "replan":
+        return <div className="text-purple-700">追加子任务：${e.added.question}</div>;
+      case "timeout":
+        return <div className="text-orange-600">达到时间上限，以已有活动汇总</div>;
       case "start":
         // 已在 run() 重置，这里只记录
         break;
