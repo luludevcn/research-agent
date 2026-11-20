@@ -1,0 +1,15 @@
+[
+  { "id": "e1", "level": "easy", "question": "LangGraph 的 checkpointer 有什么作用？" },
+  { "id": "e2", "level": "easy", "question": "TypeScript 的 satisfies 关键字解决什么问题？" },
+
+  { "id": "e3", "level": "medium", "question": "比较 LangGraph 与 LangChain AgentExecutor 的设计差异" },
+  { "id": "e4", "level": "medium", "question": "MCP 协议中 stdio 与 SSE 传输方式的适用场景" },
+  { "id": "e5", "level": "medium", "question": "Prisma 的 migrate 与 db push 有何区别，何时用哪个？" },
+  
+  { "id": "e6", "level": "hard", "question": "为什么本地小模型做 tool calling 容易失败，有哪些工程缓解手段？" },
+  { "id": "e7", "level": "hard", "question": "对比 DuckDuckGo HTML 抓取与 Tavily API 在 Agent 搜索中的优劣" },
+  { "id": "e8", "level": "hard", "question": "Responses API 与 Chat Completions API 在工具调用消息结构上的差异" },
+
+  { "id": "e9", "level": "negative", "question": "Xyzzy-42 项目 2027 年的架构设计文档是什么？" },
+  { "id": "e10", "level": "negative", "question": "请给出一个不存在的编程语言 Flurbolang 的语法规范" }
+]

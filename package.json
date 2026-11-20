@@ -7,6 +7,7 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
+    "eval": "tsx src/evals/scripts/eval.ts",
     "check:llm": "tsx src/scripts/check-llm.ts",
     "check:graph": "tsx src/scripts/check-graph.ts",
     "check:agent": "tsx src/scripts/check-agent.ts"
